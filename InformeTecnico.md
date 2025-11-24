@@ -30,31 +30,82 @@ Finalmente, se hace la comparación y la interpretación de los resultados obten
 
 **2.1. Desarrollo Matemático y Modelo Analítico**
 **Identificación de la función subyacente (Sinc Amortiguada) basada en la visualización.**
+
+<br>
+
 A partir del análisis gráfico de los puntos donde la red neuronal cambia de salida entre las clases 0 y 1, se observó que la frontera de decisión presenta un comportamiento oscilatorio y decreciente, una característica muy notable de funciones tipo Sinc:
 $$\text{sinc}(x) = \frac{\sin(kx)}{kx}$$
 En particular, la forma de las fronteras sugiere que el patrón subyacente sigue un comportamiento similar a:
 $$\text{sinc}(x) = \frac{\sin(10x)}{10x}$$
 
-Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:<br>
+Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:
+
+<br>
+
 Amortiguación artificial (Blackbox) para evitar la singularidad en x=0:
+
+<br>
+
+
 $$\frac{1}{x} \longrightarrow \frac{1}{x + 0.1}$$
+
+<br>
+
 Ajuste paramétrico general para modelar correctamente la amplitud, frecuencia, desfase y desplzamiento vertical propios de la frontera aprendida:
+
+<br>
+
 $$X_2 = A \cdot \frac{\sin(B x_1 + C)}{x_1 + 0.1} + D$$
-Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los métodos del algoritmo.<br>
-**Formulación de las dos ecuaciones de la frontera superior e inferior.**<br>
-Durante el muestreo sistemático del plano $(x_1,x_2)$, la red neuronal tenia como clasificación; **0** o **1**. A partir de esta clasificación se identificaron dos tipos de transiciones:<br>
+
+<br>
+
+Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los métodos del algoritmo.
+
+<br>
+
+**Formulación de las dos ecuaciones de la frontera superior e inferior**
+
+<br>
+
+Durante el muestreo sistemático del plano $(x_1,x_2)$, la red neuronal tenia como clasificación; **0** o **1**. A partir de esta clasificación se identificaron dos tipos de transiciones:
+
+<br>
+
 **Frontera Superior ($1\longrightarrow0$)**
 Corresponde a los puntos en donde, al aumentar x<sub>2</sub>, la red cambia su predicción desde 1 hacia 0.Es decir, se delimita el limite superior de la banda donde la red considera salida = 1.
 Esto, en un dialecto matemáticoe,quiere decir que la fronte fue modelada mediante un Sinc amortiguada con parámetros ajustados usando **curve_fit o Metodo de Levenberg-Marquardt:**
+
+<br>
+
 $$x_2^{up}(x_1) = A_{sup} \cdot \frac{\sin(B_{sup} \, x_1 + C_{sup})}{x_1 + 0.1} + D_{sup}$$
+
+<br>
+
 Los parametros A<sub>sup</sub>,B<sub>sup</sub>,C<sub>sup</sub>,D<sub>sup</sub> representan el ajuste optimo obetenido a partil del conjunto **frontera_superior**<br>
+
+<br>
+
 **Frontera Inferior ($0\longrightarrow1$)**
+
+<br>
+
 Corresponde a los punto donde, al disminuir x<sub>2</sub>, la red cambia su prediccion desde 0 hacia 1.
 Define el **limite inferior** de la region donde la red activa la salida = 1.
 Para esta formulacion analitica, se siguio el mismo modelo amortiguado, pero con parametros diferentes:
+
+<br>
+
 $$x_2^{up}(x_1) = A_{inf} \cdot \frac{\sin(B_{inf}\, x_1 + C_{inf})}{x_1 + 0.1} + D_{inf}$$
-Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.<br>
+
+<br>
+
+Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.
+
+<br>
+
 **2.2. Descripción de la Implementación:**
+
+<br>
 
 **2.2.1. Muestreo de la Frontera (Doble Bisección):** 
 Con la finalización del alcance del objetivo de obtener una representación precisa de las fronteras de decisión de la red Neuronal BlackBox S, se implemento un algoritmo de muestreo mediante una doble bisección. Dado que este método permite localizar con alta exactitud los puntos donde la red cambia su salida entre 0 y , lo cual defina una banda en la que la funcion de la red es igual a 1.
@@ -296,7 +347,11 @@ El algoritmo operó sobre:
 
 El resultado fue un conjunto de parámetros ( 𝐴 , 𝐵 , 𝐶 , 𝐷 ) (A,B,C,D) que proporcionan una aproximación de alta calidad a la frontera de la función tipo sinc amortiguada, cuyos valores fueron posteriormente comparados con el ajuste obtenido mediante Levenberg–Marquardt.
 
-* **2.3. Diagrama de Flujo / Pseudocódigo.**
+<br>
+
+**2.3. Diagrama de Flujo / Pseudocódigo.**
+
+<br>
 
 ### PSEUDOCÓDIGO: MÉTODO DE LEVENBERG MARQUARDT
 ```
@@ -603,11 +658,21 @@ En resumen, Levenberg–Marquardt es un método que combina **alta estabilidad g
     A continuación, se presenta la comparación gráfica entre las funciones obtenidas por ambos métodos y la función real en la Figura 3.<br>
     ![Gráfica de comparación de modelos ajustados y la función original](image-2.png)
 
-    *Figura 3 Comparación del ajuste de la frontera inferior utilizando Gauss-Newton y Levenberg-Marquardt*<br>
-    Para comparar los métodos utilizados, se utilizó el error cuadrático medio (MSE). Se empleó esta métrica porque el objetivo principal de los métodos empleados es reducir el error cuadrático entre los puntos trazados por la función real y los valores predichos por el modelo ajustado. Los resultados obtenidos son:<br>
+    *Figura 3 Comparación del ajuste de la frontera inferior utilizando Gauss-Newton y Levenberg-Marquardt*
+
+    <br>
+
+    Para comparar los métodos utilizados, se utilizó el error cuadrático medio (MSE). Se empleó esta métrica porque el objetivo principal de los métodos empleados es reducir el error cuadrático entre los puntos trazados por la función real y los valores predichos por el modelo ajustado. Los resultados obtenidos son:
+    
+    <br>
+
     ***MSE Levenberg-Marquardt:** 0.0094185092*
-    ***MSE Gauss-Newton:** 0.0094183050*<br>
+    ***MSE Gauss-Newton:** 0.0094183050*
+
+    <br>
+
     Con base al error presentado, se concluye que ambos métodos generan resultados muy similares en cuanto a su presición y solo se presentan diferencias en los valores de los parámetros obtenidos.
+
     <br>
 * **3.4. Análisis de Complejidad Computacional Experimental**
     Se midió el tiempo de ejecución de ambos métodos para evaluar su eficiencia computacional. Los resultados obtenidos fueron:
