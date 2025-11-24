@@ -33,35 +33,30 @@ Este apartado es responsabilidad del **Analista Matemático y de Implementación
 
     A partir del análisis gráfico de los puntos donde la red neuronal cambia de salida entre las clases 0 y 1, se observó que la frontera de decisión presenta un comportamiento oscilatorio y decreciente, una característica muy notable de funciones tipo Sinc:
 
-    <p style="text-align:center;">
 $$
 \text{sinc}(x) = \frac{\sin(kx)}{kx}
 $$
-</p>
 
     En particular, la forma de las fronteras sugiere que el patrón subyacente sigue un comportamiento similar a:
 
-        <p style="text-align:center;">
 $$
 \text{sinc}(x) = \frac{\sin(10x)}{10x}
 $$
-</p>
+
     Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:
 
 **1.Amortiguación artificial (Blackbox) para evitar la singularidad en x=0:**  
 
-     <p style="text-align:center;">
 $$
 \frac{1}{x} \;\longrightarrow\; \frac{1}{x + 0.1}
 $$
-</p>
 
 **2. Ajuste paramétrico general para modelar correctamente la amplitud, frecuencia, desfase y desplzamiento vertical propios de la frontera aprendida:**
 
-  <p style="text-align:center;">
 $$
-X<sub>2</sub> = A.\frac{\sin(Bx<sub>1</sub> + C)}{X<sub>1</sub> + 0.1} + D
+X_2 = A \cdot \frac{\sin(B x_1 + C)}{x_1 + 0.1} + D
 $$
+
 
 Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los metodos del algoritmo.
 
@@ -73,10 +68,10 @@ Durante el muestreo sistemático del plano (x<sub>1</sub>,x<sub>2</sub>), la red
 Corresponde a los puntos en donde, al aumentar x<sub>2</sub>, la red cambia su predicción desde 1 hacia 0.Es decir, se delimita el limite superior de la banda donde la red considera salida = 1.
 Esto, en un dialecto matemáticoe,quiere decir que la fronte fue modelada mediante un Sinc amortiguada con parámetros ajustados usando **curve_fit o Metodo de Levenberg-Marquardt:**
 
-  <p style="text-align:center;">
 $$
-x<sub>2</sub><sup>up</sup>(x<sub>1</sub>) = A<sub>sup</sub> . \frac{\sin(B<sub>sup</sub>x<sub>1</sub> + C<sub>sup</sub>)}{x<sub>1</sub> + 0.1} + D<sub>sup</sub>
+x_2^{up}(x_1) = A_{sup} \cdot \frac{\sin(B_{sup} \, x_1 + C_{sup})}{x_1 + 0.1} + D_{sup}
 $$
+
 
 Los parametros A<sub>sup</sub>,B<sub>sup</sub>,C<sub>sup</sub>,D<sub>sup</sub> representan el ajuste optimo obetenido a partil del conjunto **frontera_superior**
 
@@ -85,10 +80,10 @@ Corresponde a los punto donde, al disminuir x<sub>2</sub>, la red cambia su pred
 Define el **limite inferior** de la region donde la red activa la salida = 1.
 Para esta formulacion analitica, se siguio el mismo modelo amortiguado, pero con parametros diferentes:
 
-  <p style="text-align:center;">
 $$
-x<sub>2</sub><sup>up</sup>(x<sub>1</sub>) = A<sub>inf</sub> . \frac{\sin(B<sub>inf</sub>x<sub>1</sub> + C<sub>inf</sub>)}{x<sub>1</sub> + 0.1} + D<sub>inf</sub>
+x_2^{up}(x_1) = A_{inf} \cdot \frac{\sin(B_{inf}\, x_1 + C_{inf})}{x_1 + 0.1} + D_{inf}
 $$
+
 
 Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.
 
@@ -99,7 +94,7 @@ Con la finalización del alcance del objetivo de obtener una representación pre
 Dado los pasos a seguir del algoritmo, fueron:
 
   **a) Exploración inicial** 
-Para cada valor de 𝑥 1 x 1 ​ dentro del intervalo estudiado, se realizó un muestreo preliminar sobre un rango definido de valores de 𝑥 2 x 2 ​ . Este muestreo permite identificar de manera aproximada la región donde ocurre una transición abrupta en la salida de la red, ya sea:
+Para cada valor de 𝑥 1 x 1 ​ dentro del intervalo estudiado, se realizó un muestreo preliminar sobre un rango definido de valores de $𝑥_2$. Este muestreo permite identificar de manera aproximada la región donde ocurre una transición abrupta en la salida de la red, ya sea:
 
   • **De 1 a 0**(frontera superior)
 
@@ -111,16 +106,15 @@ Este punto inicial sirve como referencia para el refinamiento posterior
 
 Una vez detectado un punto aproximado donde la red deja de clasificar como 1, se define un intervalo [x<sub>2low</sub>, 𝑥<sub>2high</sub>] que contiene la transición. Sobre este intervalo se aplica el método de bisección clásica, evaluando la red en el punto medio:
 
-   <p style="text-align:center;">
 $$
-X<sub>2mid</sub> = \frac{X<sub>2</sub> + X<sub>2high</sub>}{2} 
+X_{2mid} = \frac{X_2 + X_{2high}}{2}
 $$
 
 Dependiendo del valor de la red neuronal:
 
-  •Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 1, se actualiza el límite inferior.
+  • Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 1, se actualiza el límite inferior.
 
-  •Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 0, se actualiza el límite superior.
+  • Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 0, se actualiza el límite superior.
 
 Este proceso se repite hasta que:
 
@@ -140,9 +134,9 @@ El valor final se registra como punto preciso de la frontera superior.
 
 De forma análoga, se construyó un intervalo que contiene la transición desde salida 0 hacia acceso 1. Se aplica nuevamente el método de bisección, pero con la lógica invertida:
 
-  •Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 0, la transición esta hacia valores superiores.
+  • Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 0, la transición esta hacia valores superiores.
 
-  •Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 1, la transición esta hacia valores superiores.
+  • Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 1, la transición esta hacia valores superiores.
 
 Este proceso determina con precisión el punto que pertenece a la frontera inferior.
   
@@ -190,12 +184,15 @@ $$
 "curve_fit" implementa internamente una combinación entre los métodos de **Gauss–Newton** y **descenso del gradiente**, controlada por un parámetro de amortiguamiento. Este enfoque híbrido permite:
 
 • estabilidad numérica en regiones no lineales del espacio de parámetros,
+
 • convergencia rápida cuando la función se aproxima a un comportamiento cuadrático.
 
 El ajuste se realizó suministrando:
 
 • los datos experimentales $(x_1, x_2)$,
+
 • la función modelo seleccionada,
+
 • un vector inicial de parámetros razonable.
 
 **d) Resultados del ajuste**
@@ -214,47 +211,47 @@ Finalmente, la calidad del ajuste fue evaluada mediante el cálculo del **Error 
 * **2.2.3. Método Numérico 2: Gauss-Newton (GN):** 
 
 Este metodo se lo utilizo como segundo procedimiento numérico para ajustar los parámetros del modelo analítico propuesto para la frontera de la función tipo sinc amortiguada.  
-El ajuste se aplicó sobre los puntos muestreados de la frontera superior \((x_1, x_2)\), previamente obtenidos mediante el algoritmo de doble bisección.
+El ajuste se aplicó sobre los puntos muestreados de la frontera superior $(x_1, x_2)$, previamente obtenidos mediante el algoritmo de doble bisección.
 
-El método permitió estimar los parámetros ((A, B, C, D)) del modelo:
+El método permitió estimar los parámetros (A, B, C, D) del modelo:
 
-\[
+$$ 
 x_2 = A \cdot \frac{\sin(Bx_1 + C)}{x_1 + 0.1} + D
-\]
+$$
 
 al minimizar la suma de cuadrados del error entre los valores muestreados y la estructura funcional del modelo.
 
 El método de Gauss–Newton es un algoritmo iterativo clásico para resolver problemas de regresión no lineal, en los cuales se desea estimar un conjunto de parámetros:
 
-\[ \theta = (A, B, C, D) \]
+$ \theta = (A, B, C, D) $
 
 que minimicen la función de error de mínimos cuadrados:
 
-\[
+$$
 S(\theta)=\sum_{i=1}^{n} \left[f_\theta(x_i) - y_i\right]^2
-\]
+$$
 
 donde:
 
-• \(x_i\): puntos muestreados de la frontera,
+• $(x_i$): puntos muestreados de la frontera,
 
-• \(y_i\): valores observados (provenientes del muestreo de alta precisión),
+• $(y_i$): valores observados (provenientes del muestreo de alta precisión),
 
-• \(f_\theta(\cdot)\): modelo analítico propuesto.
+• $(f_\theta(\cdot)$): modelo analítico propuesto.
 
 
   **a) Linealización del modelo**
 
 
-Gauss–Newton se basa en aproximar la función no lineal mediante una expansión de primer orden de Taylor alrededor de una estimación \(\theta_k\):
+Gauss–Newton se basa en aproximar la función no lineal mediante una expansión de primer orden de Taylor alrededor de una estimación $(\theta_k$):
 
-\[
+$$
 f_\theta(x_i) \approx f_{\theta_k}(x_i) + J_i (\theta - \theta_k)
-\]
+$$
 
-donde \(J_i\) es la fila del Jacobiano:
+donde $(J_i)$ es la fila del Jacobiano:
 
-\[
+$$
 J_i = 
 \left[
 \frac{\partial f}{\partial A},
@@ -262,33 +259,34 @@ J_i =
 \frac{\partial f}{\partial C},
 \frac{\partial f}{\partial D}
 \right]_{\theta=\theta_k}
-\]
+$$
 
 Para el modelo:
 
-\[
+$$
 f_\theta(x_1)=A\cdot \frac{\sin(Bx_1 + C)}{x_1 + 0.1} + D
-\]
+$$
 
 las derivadas parciales son:
 
-\[
+$$
 \frac{\partial f}{\partial A} = \frac{\sin(Bx_1 + C)}{x_1 + 0.1}
-\]
+$$
 
-\[
+$$
 \frac{\partial f}{\partial B}
 = A \cdot \frac{\cos(Bx_1 + C)\, x_1}{x_1 + 0.1}
-\]
+$$
 
-\[
+$$
 \frac{\partial f}{\partial C}
 = A \cdot \frac{\cos(Bx_1 + C)}{x_1 + 0.1}
-\]
+$$
 
-\[
+$$
 \frac{\partial f}{\partial D} = 1
-\]
+$$
+
 
 Estas derivadas conforman el Jacobiano evaluado en cada dato.
 
@@ -297,30 +295,29 @@ Estas derivadas conforman el Jacobiano evaluado en cada dato.
 
 Gauss–Newton resuelve, en cada iteración, el sistema:
 
-\[
+$$
 J^\top J \, \Delta\theta = - J^\top r
-\]
+$$
 
 donde:
 
-• \(J\): Jacobiano evaluado en todos los puntos,
+• $(J)$: Jacobiano evaluado en todos los puntos,
 
-• \(r\): vector de residuos:
+• $(r)$: vector de residuos:
 
 
-\[
+$$
 r_i = f_{\theta_k}(x_i) - y_i
-\]
+$$
 
 La actualización es:
 
-\[
+$$
 \theta_{k+1} = \theta_k + \Delta\theta
-\]
+$$
 
 El proceso se repite hasta cumplir criterios de convergencia:  
-pequeña variación en \(\theta\) o en la función objetivo.
-
+• pequeña variación en $(\theta)$ o en la función objetivo.
 
 
 El algoritmo operó sobre:
