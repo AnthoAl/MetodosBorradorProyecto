@@ -28,33 +28,33 @@ Finalmente, se hace la comparación y la interpretación de los resultados obten
 
 ## 2. Metodología
 
-* **2.1. Desarrollo Matemático y Modelo Analítico**
-    **Identificación de la función subyacente (Sinc Amortiguada) basada en la visualización.**
-    A partir del análisis gráfico de los puntos donde la red neuronal cambia de salida entre las clases 0 y 1, se observó que la frontera de decisión presenta un comportamiento oscilatorio y decreciente, una característica muy notable de funciones tipo Sinc:
-    $$\text{sinc}(x) = \frac{\sin(kx)}{kx}$$
-    En particular, la forma de las fronteras sugiere que el patrón subyacente sigue un comportamiento similar a:
-    $$\text{sinc}(x) = \frac{\sin(10x)}{10x}$$
+**2.1. Desarrollo Matemático y Modelo Analítico**
+**Identificación de la función subyacente (Sinc Amortiguada) basada en la visualización.**
+A partir del análisis gráfico de los puntos donde la red neuronal cambia de salida entre las clases 0 y 1, se observó que la frontera de decisión presenta un comportamiento oscilatorio y decreciente, una característica muy notable de funciones tipo Sinc:
+$$\text{sinc}(x) = \frac{\sin(kx)}{kx}$$
+En particular, la forma de las fronteras sugiere que el patrón subyacente sigue un comportamiento similar a:
+$$\text{sinc}(x) = \frac{\sin(10x)}{10x}$$
 
-    Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:<br>
-    Amortiguación artificial (Blackbox) para evitar la singularidad en x=0:
-    $$\frac{1}{x} \longrightarrow \frac{1}{x + 0.1}$$
-    Ajuste paramétrico general para modelar correctamente la amplitud, frecuencia, desfase y desplzamiento vertical propios de la frontera aprendida:
-    $$X_2 = A \cdot \frac{\sin(B x_1 + C)}{x_1 + 0.1} + D$$
-    Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los métodos del algoritmo.<br>
-    **Formulación de las dos ecuaciones de la frontera superior e inferior.**<br>
-    Durante el muestreo sistemático del plano $(x_1,x_2)$, la red neuronal tenia como clasificación; **0** o **1**. A partir de esta clasificación se identificaron dos tipos de transiciones:<br>
-    **Frontera Superior ($1\longrightarrow0$)**
-    Corresponde a los puntos en donde, al aumentar x<sub>2</sub>, la red cambia su predicción desde 1 hacia 0.Es decir, se delimita el limite superior de la banda donde la red considera salida = 1.
-    Esto, en un dialecto matemáticoe,quiere decir que la fronte fue modelada mediante un Sinc amortiguada con parámetros ajustados usando **curve_fit o Metodo de Levenberg-Marquardt:**
-    $$x_2^{up}(x_1) = A_{sup} \cdot \frac{\sin(B_{sup} \, x_1 + C_{sup})}{x_1 + 0.1} + D_{sup}$$
-    Los parametros A<sub>sup</sub>,B<sub>sup</sub>,C<sub>sup</sub>,D<sub>sup</sub> representan el ajuste optimo obetenido a partil del conjunto **frontera_superior**<br>
-    **Frontera Inferior ($0\longrightarrow1$)**
-    Corresponde a los punto donde, al disminuir x<sub>2</sub>, la red cambia su prediccion desde 0 hacia 1.
-    Define el **limite inferior** de la region donde la red activa la salida = 1.
-    Para esta formulacion analitica, se siguio el mismo modelo amortiguado, pero con parametros diferentes:
-    $$x_2^{up}(x_1) = A_{inf} \cdot \frac{\sin(B_{inf}\, x_1 + C_{inf})}{x_1 + 0.1} + D_{inf}$$
-    Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.<br>
-    **2.2. Descripción de la Implementación:**
+Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:<br>
+Amortiguación artificial (Blackbox) para evitar la singularidad en x=0:
+$$\frac{1}{x} \longrightarrow \frac{1}{x + 0.1}$$
+Ajuste paramétrico general para modelar correctamente la amplitud, frecuencia, desfase y desplzamiento vertical propios de la frontera aprendida:
+$$X_2 = A \cdot \frac{\sin(B x_1 + C)}{x_1 + 0.1} + D$$
+Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los métodos del algoritmo.<br>
+**Formulación de las dos ecuaciones de la frontera superior e inferior.**<br>
+Durante el muestreo sistemático del plano $(x_1,x_2)$, la red neuronal tenia como clasificación; **0** o **1**. A partir de esta clasificación se identificaron dos tipos de transiciones:<br>
+**Frontera Superior ($1\longrightarrow0$)**
+Corresponde a los puntos en donde, al aumentar x<sub>2</sub>, la red cambia su predicción desde 1 hacia 0.Es decir, se delimita el limite superior de la banda donde la red considera salida = 1.
+Esto, en un dialecto matemáticoe,quiere decir que la fronte fue modelada mediante un Sinc amortiguada con parámetros ajustados usando **curve_fit o Metodo de Levenberg-Marquardt:**
+$$x_2^{up}(x_1) = A_{sup} \cdot \frac{\sin(B_{sup} \, x_1 + C_{sup})}{x_1 + 0.1} + D_{sup}$$
+Los parametros A<sub>sup</sub>,B<sub>sup</sub>,C<sub>sup</sub>,D<sub>sup</sub> representan el ajuste optimo obetenido a partil del conjunto **frontera_superior**<br>
+**Frontera Inferior ($0\longrightarrow1$)**
+Corresponde a los punto donde, al disminuir x<sub>2</sub>, la red cambia su prediccion desde 0 hacia 1.
+Define el **limite inferior** de la region donde la red activa la salida = 1.
+Para esta formulacion analitica, se siguio el mismo modelo amortiguado, pero con parametros diferentes:
+$$x_2^{up}(x_1) = A_{inf} \cdot \frac{\sin(B_{inf}\, x_1 + C_{inf})}{x_1 + 0.1} + D_{inf}$$
+Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.<br>
+**2.2. Descripción de la Implementación:**
 
 **2.2.1. Muestreo de la Frontera (Doble Bisección):** 
 Con la finalización del alcance del objetivo de obtener una representación precisa de las fronteras de decisión de la red Neuronal BlackBox S, se implemento un algoritmo de muestreo mediante una doble bisección. Dado que este método permite localizar con alta exactitud los puntos donde la red cambia su salida entre 0 y , lo cual defina una banda en la que la funcion de la red es igual a 1.
@@ -471,52 +471,91 @@ FIN ALGORITMO
 ```
 <br>
 
-**2.4. Análisis de Estabilidad y Convergencia**<br>
+**2.4. Análisis de Estabilidad y Convergencia**
+<br>
+
 **Análisis del Método de Gauss–Newton**
 El método de Gauss–Newton es una estrategia iterativa utilizada para resolver problemas de minimización no lineal de mínimos cuadrados. Su convergencia se basa en la aproximación local del modelo mediante una expansión lineal, donde la matriz Hessiana es aproximada por el producto:
 <br>
+
 $$J^{\top} J$$
+
 <br>
-Esta simplificación permite reducir el costo computacional, pero también introduce limitaciones respecto a la estabilidad del método. En particular, su desempeño es altamente dependiente de la cercanía entre la estimación inicial y el mínimo verdadero. Cuando el vector inicial se encuentra dentro de una región donde la función objetivo es suficientemente suave y la linealización es válida, el método exhibe **convergencia cuasi–cuadrática**, lo que lo hace eficiente para problemas bien condicionados.<br>
+
+Esta simplificación permite reducir el costo computacional, pero también introduce limitaciones respecto a la estabilidad del método. En particular, su desempeño es altamente dependiente de la cercanía entre la estimación inicial y el mínimo verdadero. Cuando el vector inicial se encuentra dentro de una región donde la función objetivo es suficientemente suave y la linealización es válida, el método exhibe **convergencia cuasi–cuadrática**, lo que lo hace eficiente para problemas bien condicionados.
+<br>
+
 Sin embargo, la estabilidad del método se ve comprometida cuando la matriz:
+
 <br>
+
 $$
 J^{\top} J
 $$
+
 <br>
+
 es mal condicionada o cercana a la singularidad. En tales casos, los incrementos pueden crecer sin control, deteriorando la convergencia e incluso produciendo divergencias. Esta falta de robustez limita el uso práctico del método en funciones con curvatura compleja, presencia de múltiples mínimos localess o residuales grandes.
+
 <br>
+
 El método también es sensible al ruido en los datos, pues pequeñas perturbaciones afectan la estructura del jacobiano y, por ende, la calidad de la aproximación del Hessiano. Por estas razones, el método de Gauss–Newton es considerado eficiente pero débilmente estable, adecuado únicamente para escenarios donde el problema está bien condicionado y las aproximaciones lineales son válidas en la región de búsqueda.
+
 <br>
-**Análisis del Método de Levenberg–Marquardt**<br>
+
+**Análisis del Método de Levenberg–Marquardt**
+<br>
+
 El método de Levenberg–Marquardt, también conocido como *damped least squares*, surge como una combinación entre el método de Gauss–Newton y el descenso del gradiente, incorporando un parámetro de amortiguamiento que regula la estabilidad de la actualización iterativa. Este parámetro introduce un término adicional en el sistema lineal, convirtiendo la matriz:
+
 <br>
+
 $$
 J^{\top} J + \lambda I
 $$
+
 <br>
+
 en una matriz siempre invertible para:
+
 <br>
+
 $$
 \lambda > 0
 $$
+
 <br>
+
 Gracias a esta modificación, el método presenta una estabilidad significativamente superior en comparación con Gauss–Newton, incluso en situaciones donde:
 <br>
+
 $$
 J^{\top} J
 $$
-<br>
-es singular o mal condicionada. En esencia, el parámetro de amortiguamiento actúa como un regulador dinámico que controla el tamaño del paso y evita movimientos bruscos que podrían conducir a divergencias.
-En términos de convergencia, el método de Levenberg–Marquardt exhibe un comportamiento híbrido:<br>
 
-- Cuando $\lambda$ es pequeño, el método se aproxima al comportamiento cuasi–cuadrático del método de Gauss–Newton, garantizando rapidez en la convergencia.<br>
+<br>
+
+es singular o mal condicionada. En esencia, el parámetro de amortiguamiento actúa como un regulador dinámico que controla el tamaño del paso y evita movimientos bruscos que podrían conducir a divergencias.
+En términos de convergencia, el método de Levenberg–Marquardt exhibe un comportamiento híbrido:
+
+<br>
+
+- Cuando $\lambda$ es pequeño, el método se aproxima al comportamiento cuasi–cuadrático del método de Gauss–Newton, garantizando rapidez en la convergencia.
+
+<br>
+
 - Cuando la iteración se encuentra lejos del mínimo o la superficie de error presenta curvatura irregular, $\lambda$ aumenta y el método adopta un comportamiento más estable, similar al descenso por gradiente.
+
 <br>
+
 Esto proporciona una convergencia lineal pero segura.
+
 <br>
+
 Esta transición automática entre rapidez y estabilidad convierte al método en un algoritmo robusto para una amplia variedad de problemas no lineales, incluso aquellos con ruido, discontinuidades suaves o condiciones iniciales poco precisas.
+
 <br>
+
 En resumen, Levenberg–Marquardt es un método que combina **alta estabilidad global** con una **convergencia eficiente** en zonas localmente bien comportadas.
 
 ---
@@ -524,24 +563,32 @@ En resumen, Levenberg–Marquardt es un método que combina **alta estabilidad g
 
 * **3.1. Ejecución y Descripción de Casos de Prueba.**
     Se ha realizado un muestreo de varios puntos utilizando el modelo para identificar la región donde $f(x_1,x_2) = 1$. En la Figura 1, se observa que la región tiene una forma senoidal hasta $x_1 \approx 0.9$ y luego, se mantiene de forma constante.
+
     <br>
+
     ![Muestreo de datos](image.png)
 
     *Figura 1 Gráfica del muestreo de datos resultante*
+
     <br>
 
     Debido a que el conjunto de puntos está contenido en un área limitada, se aplicó el método de bisección para encontrar los puntos ubicados en la frontera de decisión donde el modelo cambia de 0 a 1 con una tolerancia de $10^{-5}$. Esto permitió obtener dos conjuntos de puntos que representan las fronteras superior e inferior del conjunto donde el modelo predice 1. Estos puntos se muestran en la Figura 2.
+
     <br>
+
     ![Fronteras de decisión](image-1.png)
 
     *Figura 2 Gráfica de las fronteras de decisión obtenidas a través del método de bisección*
+
     <br>
 
 * **3.2. Comparación con Soluciones Analíticas.**
     Con base en la forma presentada en la anterior figura y la función real utilizada por el modelo Blackbox S, se propuso el siguiente modelo de regresión no lineal basado en una variante de la función $\frac{sin(10x)}{10x}$:
     $$x_2 = \frac{Asin(Bx_1 + C)}{x_1 + 0.1} + D$$
     donde A, B, C y D son parámetros a ajustar. Se aplicaron los métodos de Gauss-Newton y Levenberg-Marquardt para ajustar estos parámetros utilizando los puntos obtenidos de la frontera inferior puesto que era la más parecida a la forma de la función original.
+
     <br>
+    
 * **3.3. Análisis de Resultados**
     Ambos métodos convergieron a soluciones similares, obteniendo los siguientes parámetros:
     - Levenberg-Marquardt: A = 0.13543566, B = 8.95118215, C = 0.63047492, D = -0.05461683
