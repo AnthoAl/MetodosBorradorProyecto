@@ -30,9 +30,93 @@ Este apartado es responsabilidad del **Analista Matemático y de Implementación
 
 * **2.1. Desarrollo Matemático y Modelo Analítico:**
     * Identificación de la función subyacente (Sinc Amortiguada) basada en la visualización.
+
+    A partir del análisis gráfico de los puntos donde la red neuronal cambia de salida entre las clases 0 y 1, se observó que la frontera de decisión presenta un comportamiento oscilatorio y decreciente, una característica muy notable de funciones tipo Sinc:
+
+    <p style="text-align:center;">
+$$
+\text{sinc}(x) = \frac{\sin(kx)}{kx}
+$$
+</p>
+
+    En particular, la forma de las fronteras sugiere que el patrón subyacente sigue un comportamiento similar a:
+
+        <p style="text-align:center;">
+$$
+\text{sinc}(x) = \frac{\sin(10x)}{10x}
+$$
+</p>
+    Sin embargo, al comparar esta función ideal con los datos generados por la red, fue necesario introducir dos modificaciones para ajustarla correctamente:
+
+**1.Amortiguación artificial (Blackbox) para evitar la singularidad en x=0:**  
+
+     <p style="text-align:center;">
+$$
+\frac{1}{x} \;\longrightarrow\; \frac{1}{x + 0.1}
+$$
+</p>
+
+**2. Ajuste paramétrico general para modelar correctamente la amplitud, frecuencia, desfase y desplzamiento vertical propios de la frontera aprendida:**
+
+  <p style="text-align:center;">
+$$
+X<sub>2</sub> = A.\frac{\sin(Bx<sub>1</sub> + C)}{X<sub>1</sub> + 0.1} + D
+$$
+
+Este modelo constituye una **Sinc amortiguada paramétrica**, que analiza el comportamiento oscilatorio de la frontera, pero a su vez permite adaptarlo a los valores reales detectados por los metodos del algoritmo.
+
     * Formulación de las dos ecuaciones de la frontera superior e inferior.
+
+Durante el muestreo sistemático del plano (x<sub>1</sub>,x<sub>2</sub>), la red neuronal tenia como clasificación; **0** o **1**. A partir de esta clasificación se identificaron dos tipos de transiciones:
+
+1. **Frontera Superior ($1\longrightarrow0$)**
+Corresponde a los puntos en donde, al aumentar x<sub>2</sub>, la red cambia su predicción desde 1 hacia 0.Es decir, se delimita el limite superior de la banda donde la red considera salida = 1.
+Esto, en un dialecto matemáticoe,quiere decir que la fronte fue modelada mediante un Sinc amortiguada con parámetros ajustados usando **curve_fit o Metodo de Levenberg-Marquardt:**
+
+  <p style="text-align:center;">
+$$
+x<sub>2</sub><sup>up</sup>(x<sub>1</sub>) = A<sub>sup</sub> . \frac{\sin(B<sub>sup</sub>x<sub>1</sub> + C<sub>sup</sub>)}{x<sub>1</sub> + 0.1} + D<sub>sup</sub>
+$$
+
+Los parametros A<sub>sup</sub>,B<sub>sup</sub>,C<sub>sup</sub>,D<sub>sup</sub> representan el ajuste optimo obetenido a partil del conjunto **frontera_superior**
+
+2. **Frontera Inferior ($0\longrightarrow1$)**
+Corresponde a los punto donde, al disminuir x<sub>2</sub>, la red cambia su prediccion desde 0 hacia 1.
+Define el **limite inferior** de la region donde la red activa la salida = 1.
+Para esta formulacion analitica, se siguio el mismo modelo amortiguado, pero con parametros diferentes:
+
+  <p style="text-align:center;">
+$$
+x<sub>2</sub><sup>up</sup>(x<sub>1</sub>) = A<sub>inf</sub> . \frac{\sin(B<sub>inf</sub>x<sub>1</sub> + C<sub>inf</sub>)}{x<sub>1</sub> + 0.1} + D<sub>inf</sub>
+$$
+
+Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastaron numéricamente con la aproximación de Levenberg-Marquardt para validad la equivalencia del ajuste.
+
 * **2.2. Descripción de la Implementación:**
-    * **2.2.1. Muestreo de la Frontera (Doble Bisección):** Explicación del algoritmo para encontrar los puntos de alta precisión.
+    * **2.2.1. Muestreo de la Frontera (Doble Bisección):** 
+    Con la finalización del alcance del objetivo de obtener una representación precisa de las fronteras de decisión de la red Neuronal BlackBox S, se implemento un algoritmo de muestreo mediante una doble bisección. Dado que este método permite localizar con alta exactitud los puntos donde la red cambia su salida entre 0 y , lo cual defina una banda en la que la funcion de la red es igual a 1.
+
+    Dado los pasos a seguir del algoritmo, fueron:
+
+    **a) Exploración inicial** 
+    Para cada valor de 𝑥 1 x 1 ​ dentro del intervalo estudiado, se realizó un muestreo preliminar sobre un rango definido de valores de 𝑥 2 x 2 ​ . Este muestreo permite identificar de manera aproximada la región donde ocurre una transición abrupta en la salida de la red, ya sea:
+
+    • **De 1 a 0**(frontera superior)
+
+    • **De 0 a 1**(frontera inferior)
+
+    Este punto inicial sirve como referencia para el refinamiento posterior
+
+    **b) Bisección para la Frontera Superior ($1\longrightarrow0$)** 
+
+    Una vez detectado un punto aproximado donde la red deja de clasificar como 1, se define un intervalo [x<sub>2low</sub>, 𝑥<sub>2high</sub>] que contiene la transición. Sobre este intervalo se aplica el método de bisección clásica, evaluando la red en el punto medio:
+
+      <p style="text-align:center;">
+$$
+X<sub>2mid</sub> = \frac{X<sub>2</sub> + X<sub>2high</sub>}{2} 
+$$
+
+
     * **2.2.2. Método Numérico 1: Levenberg-Marquardt (L-M):** Implementación de la regresión no lineal (usando `scipy.optimize.curve_fit`).
     * **2.2.3. Método Numérico 2: Gauss-Newton (GN):** Implementación manual para comparación.
 * **2.3. Diagrama de Flujo / Pseudocódigo.**
