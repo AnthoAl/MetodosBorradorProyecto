@@ -107,12 +107,20 @@ Los parametros a evaluar se obtuvieron el método de Guss-Newton y se contrastar
 
 <br>
 
-**2.2.1. Muestreo de la Frontera (Doble Bisección):** 
+**2.2.1. Muestreo de la Frontera (Doble Bisección)**
+
+<br>
+
 Con la finalización del alcance del objetivo de obtener una representación precisa de las fronteras de decisión de la red Neuronal BlackBox S, se implemento un algoritmo de muestreo mediante una doble bisección. Dado que este método permite localizar con alta exactitud los puntos donde la red cambia su salida entre 0 y , lo cual defina una banda en la que la funcion de la red es igual a 1.
 
 Dado los pasos a seguir del algoritmo, fueron:
 
-  **a) Exploración inicial** 
+<br>
+
+**a) Exploración inicial**
+
+<br>
+
 Para cada valor de 𝑥 1 x 1 ​ dentro del intervalo estudiado, se realizó un muestreo preliminar sobre un rango definido de valores de $𝑥_2$. Este muestreo permite identificar de manera aproximada la región donde ocurre una transición abrupta en la salida de la red, ya sea:
 
   • **De 1 a 0**(frontera superior)
@@ -121,7 +129,11 @@ Para cada valor de 𝑥 1 x 1 ​ dentro del intervalo estudiado, se realizó un
 
 Este punto inicial sirve como referencia para el refinamiento posterior
 
-  **b) Bisección para la Frontera Superior ($1\longrightarrow0$)** 
+<br>
+
+**b) Bisección para la Frontera Superior ($1\longrightarrow0$)** 
+
+<br>
 
 Una vez detectado un punto aproximado donde la red deja de clasificar como 1, se define un intervalo [x<sub>2low</sub>, 𝑥<sub>2high</sub>] que contiene la transición. Sobre este intervalo se aplica el método de bisección clásica, evaluando la red en el punto medio:
 
@@ -149,7 +161,11 @@ $$
 
 El valor final se registra como punto preciso de la frontera superior.
 
- **c) Bisección para la Frontera Inferior (0 → 1)**
+<br>
+
+**c) Bisección para la Frontera Inferior (0 → 1)**
+
+<br>
 
 De forma análoga, se construyó un intervalo que contiene la transición desde salida 0 hacia acceso 1. Se aplica nuevamente el método de bisección, pero con la lógica invertida:
 
@@ -158,12 +174,20 @@ De forma análoga, se construyó un intervalo que contiene la transición desde 
   • Si 𝑓(𝑥<sub>1</sub>,𝑥<sub>2mid</sub>) = 1, la transición esta hacia valores superiores.
 
 Este proceso determina con precisión el punto que pertenece a la frontera inferior.
-  
-* **2.2.2. Método Numérico 1: Levenberg-Marquardt (L-M):** 
+
+<br>
+
+**2.2.2. Método Numérico 1: Levenberg-Marquardt (L-M):** 
+
+<br>
 
 Con el propósito de obtener un modelo analítico que describiera con precisión la forma de la frontera inferior identificada en el proceso de muestreo, se aplicó un procedimiento de regresión no lineal mediante el algoritmo de **Levenberg–Marquardt**, implementado a través de la función "curve_fit" del paquete **scipy.optimize**.
 
+<br>
+
 **a) Selección del modelo analítico**
+
+<br>
 
 A partir de la visualización de los datos muestreados, se identificó que el comportamiento de la frontera inferior sigue la estructura de una Sinc amortiguada. Para evitar la singularidad en  x<sub>1</sub1>= 0 se utilizó la siguiente formulación:
 
@@ -175,7 +199,11 @@ donde
 
 A, B, C y D representan los parámetros a estimar mediante el ajuste
 
+<br>
+
 **b) Formulación del problema de minimización**
+
+<br>
 
 El objetivo del método consiste en encontrar los parámetros que minimicen la suma de los errores cuadráticos entre los datos reales  (x<sub>1,i</sub>,x<sub>2,i</sub>)obtenidos por bisección y los valores predichos por el modelo analítico:
 
@@ -194,7 +222,11 @@ y
 
 $$f(x_1;\beta)=A \, \frac{\sin(Bx_1 + C)}{x_1 + 0.1} + D$$
 
+<br>
+
 **c) Implementación del algoritmo Levenberg–Marquardt**
+
+<br>
 
 "curve_fit" implementa internamente una combinación entre los métodos de **Gauss–Newton** y **descenso del gradiente**, controlada por un parámetro de amortiguamiento. Este enfoque híbrido permite:
 
@@ -210,7 +242,11 @@ El ajuste se realizó suministrando:
 
 • un vector inicial de parámetros razonable.
 
+<br>
+
 **d) Resultados del ajuste**
+
+<br>
 
 El método devolvió el conjunto de parámetros óptimos:
 
@@ -222,8 +258,11 @@ los cuales constituyen la representación cerrada de la frontera inferior de la 
 
 Finalmente, la calidad del ajuste fue evaluada mediante el cálculo del **Error Cuadrático Medio (MSE)**, evidenciando que el modelo Sinc amortiguado ofrece una aproximación precisa a los datos generados por la red.
 
+<br>
 
-* **2.2.3. Método Numérico 2: Gauss-Newton (GN):** 
+**2.2.3. Método Numérico 2: Gauss-Newton (GN):** 
+
+<br>
 
 Este metodo se lo utilizo como segundo procedimiento numérico para ajustar los parámetros del modelo analítico propuesto para la frontera de la función tipo sinc amortiguada.  
 El ajuste se aplicó sobre los puntos muestreados de la frontera superior $(x_1, x_2)$, previamente obtenidos mediante el algoritmo de doble bisección.
