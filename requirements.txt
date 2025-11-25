@@ -1,2 +1,4 @@
 keras==3.9.2
 numpy==2.2.6
+matplotlib==3.10.7
+scipy==1.16.2
